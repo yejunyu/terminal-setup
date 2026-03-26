@@ -90,6 +90,7 @@ run_install() {
   esac
 
   install_oh_my_zsh
+  install_zsh_plugins
   install_p10k
   install_bun
 
@@ -136,8 +137,9 @@ run_uninstall() {
     info "Skipped brew-managed package removal"
   fi
 
-  if confirm_action "Remove Oh My Zsh and powerlevel10k, then restore or remove ~/.zshrc?"; then
+  if confirm_action "Remove Oh My Zsh, p10k, managed Zsh plugins, then restore or remove ~/.zshrc?"; then
     [[ -e "$HOME/.zshrc" ]] && backup_path "$HOME/.zshrc"
+    remove_zsh_plugins
     remove_oh_my_zsh
     restore_or_remove_path "$HOME/.zshrc" "$previous_backup_dir"
   else

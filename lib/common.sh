@@ -16,6 +16,8 @@ BREW_API_DOMAIN="${HOMEBREW_API_DOMAIN:-https://mirrors.tuna.tsinghua.edu.cn/hom
 BREW_BOTTLE_DOMAIN="${HOMEBREW_BOTTLE_DOMAIN:-https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles}"
 OH_MY_ZSH_REMOTE="${OH_MY_ZSH_REMOTE:-https://mirrors.tuna.tsinghua.edu.cn/git/ohmyzsh.git}"
 P10K_REMOTE="${P10K_REMOTE:-https://github.com/romkatv/powerlevel10k.git}"
+ZSH_AUTOSUGGESTIONS_REMOTE="${ZSH_AUTOSUGGESTIONS_REMOTE:-https://gitee.com/zsh-users/zsh-autosuggestions.git}"
+ZSH_SYNTAX_HIGHLIGHTING_REMOTE="${ZSH_SYNTAX_HIGHLIGHTING_REMOTE:-https://gitee.com/zsh-users/zsh-syntax-highlighting.git}"
 NVIM_REMOTE="${NVIM_REMOTE:-https://github.com/yejunyu/mynvim.git}"
 BUN_INSTALL_URL="${BUN_INSTALL_URL:-https://bun.sh/install}"
 
@@ -361,6 +363,28 @@ install_oh_my_zsh() {
   fi
 }
 
+install_zsh_plugin() {
+  local name="$1"
+  local remote="$2"
+  local target="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/$name"
+
+  mkdir -p "$(dirname "$target")"
+
+  if [[ -d "$target/.git" ]]; then
+    info "Updating Zsh plugin $name..."
+    git -C "$target" remote set-url origin "$remote"
+    git -C "$target" pull --ff-only || warn "Skipping update for $name"
+  else
+    info "Cloning Zsh plugin $name..."
+    git clone --depth=1 "$remote" "$target"
+  fi
+}
+
+install_zsh_plugins() {
+  install_zsh_plugin "zsh-autosuggestions" "$ZSH_AUTOSUGGESTIONS_REMOTE"
+  install_zsh_plugin "zsh-syntax-highlighting" "$ZSH_SYNTAX_HIGHLIGHTING_REMOTE"
+}
+
 install_p10k() {
   local target="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
   mkdir -p "$(dirname "$target")"
@@ -390,6 +414,27 @@ remove_oh_my_zsh() {
 
   if [[ "$removed" -eq 0 ]]; then
     warn "Oh My Zsh and powerlevel10k are already absent"
+  fi
+}
+
+remove_zsh_plugins() {
+  local removed=0
+  local target
+  local plugins_root="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
+
+  for target in \
+    "$plugins_root/zsh-autosuggestions" \
+    "$plugins_root/zsh-syntax-highlighting"
+  do
+    if [[ -e "$target" ]]; then
+      rm -rf "$target"
+      ok "Removed $target"
+      removed=1
+    fi
+  done
+
+  if [[ "$removed" -eq 0 ]]; then
+    warn "Managed Zsh plugins are already absent"
   fi
 }
 

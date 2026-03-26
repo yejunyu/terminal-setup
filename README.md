@@ -41,6 +41,7 @@ bash setup.sh uninstall
 - WezTerm with your shared `.wezterm.lua`
 - Managed WezTerm wallpaper at `~/.config/terminal-setup/wallpaper.jpg`
 - Zsh, Oh My Zsh, and powerlevel10k
+- Oh My Zsh plugins: `extract`, `zsh-autosuggestions`, `zsh-syntax-highlighting`
 - Neovim plus your `yejunyu/mynvim` LazyVim config
 - Go
 - fnm + Node.js LTS
@@ -66,6 +67,7 @@ bash setup.sh uninstall
 - `HOMEBREW_CORE_GIT_REMOTE` is intentionally not set by default, matching the current TUNA guidance for modern brew installs.
 - `setup.sh install` detects the operating system with `uname -s` and applies the correct macOS or Linux installation path.
 - `setup.sh uninstall` is interactive. It can remove WezTerm, Neovim, Go, CLI tools, `oh-my-zsh`, `powerlevel10k`, `bun`, `fnm`, Node runtimes, and Homebrew/Linuxbrew.
+- The shell setup enables `extract`, `zsh-autosuggestions`, and `zsh-syntax-highlighting`.
 - Uninstall preserves `zsh`, fonts, and the wallpaper file.
 - On Linux, font installation is best-effort: the installer bootstraps the two primary Nerd Fonts first, then warns if you still need extra CJK fallback fonts.
 - On first launch after setup, run `p10k configure` to generate your own `~/.p10k.zsh`.
@@ -106,7 +108,7 @@ sudo pacman -S base-devel procps-ng curl file git
 `bash setup.sh uninstall` confirms each group separately:
 
 - brew-managed packages: WezTerm, Neovim, Go, CLI tools, and `fnm`
-- shell customizations: `oh-my-zsh`, `powerlevel10k`, and `.zshrc`
+- shell customizations: `oh-my-zsh`, `powerlevel10k`, `zsh-autosuggestions`, `zsh-syntax-highlighting`, and `.zshrc`
 - runtimes: `bun`, `fnm`, and installed Node versions
 - WezTerm config: `~/.wezterm.lua`
 - Neovim config: `~/.config/nvim`

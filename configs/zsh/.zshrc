@@ -3,7 +3,12 @@ export ZSH_THEME="powerlevel10k/powerlevel10k"
 export DISABLE_AUTO_UPDATE="true"
 export DISABLE_UPDATE_PROMPT="true"
 
-plugins=(git)
+plugins=(
+  git
+  extract
+  zsh-syntax-highlighting
+  zsh-autosuggestions
+)
 
 if [[ -r "$ZSH/oh-my-zsh.sh" ]]; then
   source "$ZSH/oh-my-zsh.sh"
