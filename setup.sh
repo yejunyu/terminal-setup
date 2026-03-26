@@ -137,11 +137,11 @@ run_uninstall() {
     info "Skipped brew-managed package removal"
   fi
 
-  if confirm_action "Remove Oh My Zsh, p10k, managed Zsh plugins, then restore or remove ~/.zshrc?"; then
+  if confirm_action "Remove Oh My Zsh, p10k, managed Zsh plugins, then restore ~/.zshrc or create a minimal fallback?"; then
     [[ -e "$HOME/.zshrc" ]] && backup_path "$HOME/.zshrc"
     remove_zsh_plugins
     remove_oh_my_zsh
-    restore_or_remove_path "$HOME/.zshrc" "$previous_backup_dir"
+    restore_or_create_minimal_zshrc "$previous_backup_dir"
   else
     info "Skipped shell customization removal"
   fi

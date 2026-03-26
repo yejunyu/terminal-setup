@@ -133,6 +133,36 @@ restore_or_remove_path() {
   fi
 }
 
+write_minimal_zshrc() {
+  mkdir -p "$HOME"
+  cat > "$HOME/.zshrc" <<'EOF'
+# Minimal zsh config restored by terminal-setup uninstall.
+autoload -Uz compinit
+compinit
+PROMPT='%n@%m:%~ %# '
+EOF
+  ok "Wrote minimal ~/.zshrc"
+}
+
+restore_or_create_minimal_zshrc() {
+  local backup_dir="${1:-}"
+  local path="$HOME/.zshrc"
+  local backup_target=""
+
+  if [[ -n "$backup_dir" ]]; then
+    backup_target="$backup_dir/$(backup_key_for_path "$path")"
+  fi
+
+  if [[ -n "$backup_target" && -e "$backup_target" ]]; then
+    mkdir -p "$(dirname "$path")"
+    mv "$backup_target" "$path"
+    ok "Restored $path from $backup_dir"
+    return 0
+  fi
+
+  write_minimal_zshrc
+}
+
 confirm_action() {
   local prompt="$1"
   local reply
