@@ -6,6 +6,7 @@ source "$SCRIPT_DIR/lib/common.sh"
 
 OS_NAME="$(uname -s)"
 ACTION="${1:-}"
+SKIP_WEZTERM_INSTALL=0
 
 COMMON_FORMULAE=(
   git
@@ -58,6 +59,7 @@ usage() {
   cat <<'EOF'
 Usage:
   bash setup.sh install
+  bash setup.sh install --skip-wezterm-install
   bash setup.sh uninstall
 EOF
 }
@@ -74,14 +76,27 @@ run_install() {
 
       install_homebrew
       brew_install "${COMMON_FORMULAE[@]}"
-      brew_install_casks "${MAC_CASKS[@]}"
+      if [[ "$SKIP_WEZTERM_INSTALL" -eq 1 ]]; then
+        info "Skipping WezTerm cask install by request"
+        brew_install_casks \
+          font-martian-mono-nerd-font \
+          font-jetbrains-mono-nerd-font \
+          font-cascadia-mono \
+          font-noto-sans-mono-cjk-sc
+      else
+        brew_install_casks "${MAC_CASKS[@]}"
+      fi
       ;;
     Linux)
       ensure_linux_prereqs
       install_homebrew
       brew_install "${COMMON_FORMULAE[@]}" unzip fontconfig
-      brew tap wezterm/wezterm-linuxbrew
-      brew_install wezterm
+      if [[ "$SKIP_WEZTERM_INSTALL" -eq 1 ]]; then
+        info "Skipping WezTerm formula install by request"
+      else
+        brew tap wezterm/wezterm-linuxbrew
+        brew_install wezterm
+      fi
       install_linux_fonts_best_effort
       ;;
     *)
@@ -186,6 +201,19 @@ EOF
 
 case "$ACTION" in
   install)
+    shift
+    while [[ "$#" -gt 0 ]]; do
+      case "$1" in
+        --skip-wezterm-install)
+          SKIP_WEZTERM_INSTALL=1
+          ;;
+        *)
+          usage
+          exit 1
+          ;;
+      esac
+      shift
+    done
     run_install
     ;;
   uninstall)

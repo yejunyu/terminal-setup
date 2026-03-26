@@ -29,6 +29,12 @@ cd terminal-setup
 bash setup.sh install
 ```
 
+Server-style install without the WezTerm package:
+
+```bash
+bash setup.sh install --skip-wezterm-install
+```
+
 ## Uninstall
 
 ```bash
@@ -66,6 +72,7 @@ bash setup.sh uninstall
 - It only updates existing shell profile files; if none exist, it creates `~/.zprofile` instead of creating every possible profile file.
 - `HOMEBREW_CORE_GIT_REMOTE` is intentionally not set by default, matching the current TUNA guidance for modern brew installs.
 - `setup.sh install` detects the operating system with `uname -s` and applies the correct macOS or Linux installation path.
+- `setup.sh install --skip-wezterm-install` skips only the `brew install wezterm` step. It still writes `.wezterm.lua`, copies the wallpaper, and keeps the font steps unchanged.
 - `setup.sh uninstall` is interactive. It can remove WezTerm, Neovim, Go, CLI tools, `oh-my-zsh`, `powerlevel10k`, `bun`, `fnm`, Node runtimes, and Homebrew/Linuxbrew.
 - The shell setup enables `extract`, `zsh-autosuggestions`, and `zsh-syntax-highlighting`.
 - Uninstall preserves `zsh`, fonts, and the wallpaper file.
