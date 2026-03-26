@@ -54,8 +54,8 @@ config.keys = {
 	{ key = "DownArrow", mods = "LEADER", action = wezterm.action.AdjustPaneSize({ "Down", 5 }) },
 }
 
--- 5) Wallpaper if present at ~/Pictures/wallpaper.png
-local wallpaper = wezterm.home_dir .. "/Pictures/wallpaper.png"
+-- 5) Wallpaper if present at ~/.config/terminal-setup/wallpaper.jpg
+local wallpaper = wezterm.home_dir .. "/.config/terminal-setup/wallpaper.jpg"
 local f = io.open(wallpaper, "rb")
 if f then
 	f:close()

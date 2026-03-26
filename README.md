@@ -7,7 +7,13 @@ Cross-platform terminal bootstrap for macOS and Linux, built around your current
 ```text
 terminal-setup/
 ├── README.md
+├── assets/
+│   └── wallpaper.jpg
 ├── setup.sh
+├── docs/
+│   └── plans/
+│       ├── 2026-03-26-terminal-setup-uninstall-design.md
+│       └── 2026-03-26-terminal-setup-uninstall.md
 ├── lib/
 │   └── common.sh
 └── configs/
@@ -20,13 +26,20 @@ terminal-setup/
 ```bash
 git clone <your-repo-url> terminal-setup
 cd terminal-setup
-bash setup.sh
+bash setup.sh install
+```
+
+## Uninstall
+
+```bash
+bash setup.sh uninstall
 ```
 
 ## What Gets Installed
 
 - Homebrew / Linuxbrew using TUNA mirrors
 - WezTerm with your shared `.wezterm.lua`
+- Managed WezTerm wallpaper at `~/.config/terminal-setup/wallpaper.jpg`
 - Zsh, Oh My Zsh, and powerlevel10k
 - Neovim plus your `yejunyu/mynvim` LazyVim config
 - Go
@@ -51,9 +64,12 @@ bash setup.sh
 - The installer persists TUNA mirror variables for Homebrew in your shell profile files.
 - It only updates existing shell profile files; if none exist, it creates `~/.zprofile` instead of creating every possible profile file.
 - `HOMEBREW_CORE_GIT_REMOTE` is intentionally not set by default, matching the current TUNA guidance for modern brew installs.
-- `setup.sh` detects the operating system with `uname -s` and applies the correct macOS or Linux installation path.
+- `setup.sh install` detects the operating system with `uname -s` and applies the correct macOS or Linux installation path.
+- `setup.sh uninstall` is interactive. It can remove WezTerm, Neovim, Go, CLI tools, `oh-my-zsh`, `powerlevel10k`, `bun`, `fnm`, Node runtimes, and Homebrew/Linuxbrew.
+- Uninstall preserves `zsh`, fonts, and the wallpaper file.
 - On Linux, font installation is best-effort: the installer bootstraps the two primary Nerd Fonts first, then warns if you still need extra CJK fallback fonts.
 - On first launch after setup, run `p10k configure` to generate your own `~/.p10k.zsh`.
+- During install, the wallpaper from `assets/wallpaper.jpg` is copied to `~/.config/terminal-setup/wallpaper.jpg`.
 
 ## Linux Preflight
 
@@ -84,6 +100,23 @@ Arch Linux:
 ```bash
 sudo pacman -S base-devel procps-ng curl file git
 ```
+
+## Uninstall Behavior
+
+`bash setup.sh uninstall` confirms each group separately:
+
+- brew-managed packages: WezTerm, Neovim, Go, CLI tools, and `fnm`
+- shell customizations: `oh-my-zsh`, `powerlevel10k`, and `.zshrc`
+- runtimes: `bun`, `fnm`, and installed Node versions
+- WezTerm config: `~/.wezterm.lua`
+- Neovim config: `~/.config/nvim`
+- Homebrew/Linuxbrew itself
+
+What it keeps:
+
+- `zsh`
+- fonts
+- `~/.config/terminal-setup/wallpaper.jpg`
 
 ## CLI Cheat Sheet
 

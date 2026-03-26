@@ -3,9 +3,12 @@ set -euo pipefail
 
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIG_DIR="$ROOT_DIR/configs"
+ASSET_DIR="$ROOT_DIR/assets"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/terminal-setup"
 RUN_ID="${RUN_ID:-$(date +%Y%m%d_%H%M%S)}"
 BACKUP_DIR="$STATE_DIR/backups/$RUN_ID"
+TERMINAL_SETUP_CONFIG_DIR="$HOME/.config/terminal-setup"
+WALLPAPER_DEST="$TERMINAL_SETUP_CONFIG_DIR/wallpaper.jpg"
 
 BREW_GIT_REMOTE="${HOMEBREW_BREW_GIT_REMOTE:-https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git}"
 BREW_CORE_GIT_REMOTE="${HOMEBREW_CORE_GIT_REMOTE:-}"
@@ -40,12 +43,17 @@ prepare_run() {
   info "Backup directory: $BACKUP_DIR"
 }
 
+backup_key_for_path() {
+  local path="$1"
+  echo "$path" | sed "s#${HOME}#HOME#g; s#[/ ]#_#g"
+}
+
 backup_path() {
   local path="$1"
   [[ -e "$path" ]] || return 0
 
   local safe_name
-  safe_name="$(echo "$path" | sed "s#${HOME}#HOME#g; s#[/ ]#_#g")"
+  safe_name="$(backup_key_for_path "$path")"
   mkdir -p "$BACKUP_DIR"
   mv "$path" "$BACKUP_DIR/$safe_name"
   warn "Backed up $path -> $BACKUP_DIR/$safe_name"
@@ -61,6 +69,14 @@ copy_with_backup() {
   ok "Wrote $dest"
 }
 
+copy_wallpaper() {
+  local src="$ASSET_DIR/wallpaper.jpg"
+  [[ -f "$src" ]] || die "Wallpaper asset does not exist: $src"
+  mkdir -p "$TERMINAL_SETUP_CONFIG_DIR"
+  cp "$src" "$WALLPAPER_DEST"
+  ok "Installed wallpaper to $WALLPAPER_DEST"
+}
+
 ensure_line() {
   local file="$1"
   local line="$2"
@@ -74,6 +90,69 @@ ensure_block_once() {
   local content="$3"
   touch "$file"
   grep -qF "$marker" "$file" 2>/dev/null || printf '\n%s\n%s\n' "$marker" "$content" >> "$file"
+}
+
+find_latest_backup_dir() {
+  local exclude="${1:-}"
+  local candidate
+
+  [[ -d "$STATE_DIR/backups" ]] || return 1
+
+  while IFS= read -r candidate; do
+    [[ -n "$exclude" && "$candidate" == "$exclude" ]] && continue
+    printf '%s\n' "$candidate"
+    return 0
+  done < <(find "$STATE_DIR/backups" -mindepth 1 -maxdepth 1 -type d | sort -r)
+
+  return 1
+}
+
+restore_or_remove_path() {
+  local path="$1"
+  local backup_dir="${2:-}"
+  local backup_target=""
+
+  if [[ -n "$backup_dir" ]]; then
+    backup_target="$backup_dir/$(backup_key_for_path "$path")"
+  fi
+
+  if [[ -n "$backup_target" && -e "$backup_target" ]]; then
+    mkdir -p "$(dirname "$path")"
+    mv "$backup_target" "$path"
+    ok "Restored $path from $backup_dir"
+    return 0
+  fi
+
+  if [[ -e "$path" ]]; then
+    rm -rf "$path"
+    ok "Removed $path"
+  else
+    warn "No backup found for $path; nothing to restore"
+  fi
+}
+
+confirm_action() {
+  local prompt="$1"
+  local reply
+
+  while true; do
+    printf '%s [y/N] ' "$prompt"
+    if ! read -r reply; then
+      return 1
+    fi
+
+    case "$reply" in
+      [Yy]|[Yy][Ee][Ss])
+        return 0
+        ;;
+      ""|[Nn]|[Nn][Oo])
+        return 1
+        ;;
+      *)
+        warn "Please answer y or n."
+        ;;
+    esac
+  done
 }
 
 load_brew_env() {
@@ -227,6 +306,48 @@ brew_install_casks() {
   fi
 }
 
+brew_uninstall_formulae() {
+  local installed=()
+  local pkg
+
+  load_brew_env || {
+    warn "Homebrew is unavailable; skipping formula uninstall"
+    return 0
+  }
+
+  for pkg in "$@"; do
+    brew list --formula "$pkg" >/dev/null 2>&1 && installed+=("$pkg")
+  done
+
+  if [[ "${#installed[@]}" -gt 0 ]]; then
+    info "Removing formulae: ${installed[*]}"
+    brew uninstall --force "${installed[@]}"
+  else
+    ok "Requested formulae are already absent"
+  fi
+}
+
+brew_uninstall_casks() {
+  local installed=()
+  local pkg
+
+  load_brew_env || {
+    warn "Homebrew is unavailable; skipping cask uninstall"
+    return 0
+  }
+
+  for pkg in "$@"; do
+    brew list --cask "$pkg" >/dev/null 2>&1 && installed+=("$pkg")
+  done
+
+  if [[ "${#installed[@]}" -gt 0 ]]; then
+    info "Removing casks: ${installed[*]}"
+    brew uninstall --cask "${installed[@]}"
+  else
+    ok "Requested casks are already absent"
+  fi
+}
+
 install_oh_my_zsh() {
   local target="$HOME/.oh-my-zsh"
 
@@ -251,6 +372,24 @@ install_p10k() {
   else
     info "Cloning powerlevel10k..."
     git clone --depth=1 "$P10K_REMOTE" "$target"
+  fi
+}
+
+remove_oh_my_zsh() {
+  local removed=0
+  local target
+  local p10k_path="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
+
+  for target in "$HOME/.oh-my-zsh" "$p10k_path" "$HOME/.p10k.zsh"; do
+    if [[ -e "$target" ]]; then
+      rm -rf "$target"
+      ok "Removed $target"
+      removed=1
+    fi
+  done
+
+  if [[ "$removed" -eq 0 ]]; then
+    warn "Oh My Zsh and powerlevel10k are already absent"
   fi
 }
 
@@ -290,12 +429,46 @@ install_bun() {
   ok "bun installed"
 }
 
+remove_bun_runtime() {
+  local removed=0
+  local target
+
+  for target in "$HOME/.bun" "$HOME/.cache/bun"; do
+    if [[ -e "$target" ]]; then
+      rm -rf "$target"
+      ok "Removed $target"
+      removed=1
+    fi
+  done
+
+  if [[ "$removed" -eq 0 ]]; then
+    warn "bun runtime directories are already absent"
+  fi
+}
+
 configure_fnm_node() {
   eval "$(fnm env --use-on-cd --shell bash)"
   fnm install --lts
   fnm default lts-latest
   fnm use lts-latest
   ok "Node LTS installed and selected through fnm"
+}
+
+remove_fnm_runtime() {
+  local removed=0
+  local target
+
+  for target in "$HOME/.local/share/fnm" "$HOME/.fnm"; do
+    if [[ -e "$target" ]]; then
+      rm -rf "$target"
+      ok "Removed $target"
+      removed=1
+    fi
+  done
+
+  if [[ "$removed" -eq 0 ]]; then
+    warn "fnm runtime directories are already absent"
+  fi
 }
 
 install_nvim_config() {
@@ -323,6 +496,101 @@ install_nvim_config() {
   info "Cloning Neovim config from $NVIM_REMOTE"
   git clone --depth=1 "$NVIM_REMOTE" "$target"
   ok "Neovim config installed"
+}
+
+remove_exact_lines() {
+  local file="$1"
+  shift
+
+  [[ -f "$file" ]] || return 0
+
+  local patterns
+  local tmp
+  patterns="$(mktemp)"
+  tmp="$(mktemp)"
+
+  printf '%s\n' "$@" > "$patterns"
+  awk 'NR == FNR { skip[$0] = 1; next } !($0 in skip)' "$patterns" "$file" > "$tmp"
+  mv "$tmp" "$file"
+  rm -f "$patterns"
+}
+
+remove_lines_matching_regex() {
+  local file="$1"
+  shift
+
+  [[ -f "$file" ]] || return 0
+
+  local patterns
+  local tmp
+  patterns="$(mktemp)"
+  tmp="$(mktemp)"
+
+  printf '%s\n' "$@" > "$patterns"
+  awk '
+    NR == FNR { patterns[++count] = $0; next }
+    {
+      for (i = 1; i <= count; i++) {
+        if ($0 ~ patterns[i]) {
+          next
+        }
+      }
+      print
+    }
+  ' "$patterns" "$file" > "$tmp"
+  mv "$tmp" "$file"
+  rm -f "$patterns"
+}
+
+remove_terminal_setup_brew_profile_block() {
+  local file
+  local changed=0
+
+  for file in "$HOME/.zprofile" "$HOME/.profile" "$HOME/.bash_profile"; do
+    [[ -f "$file" ]] || continue
+
+    remove_lines_matching_regex \
+      "$file" \
+      '^export HOMEBREW_BREW_GIT_REMOTE=' \
+      '^export HOMEBREW_API_DOMAIN=' \
+      '^export HOMEBREW_BOTTLE_DOMAIN=' \
+      '^export HOMEBREW_CORE_GIT_REMOTE=' \
+      '^# terminal-setup: brew shellenv$' \
+      '^if \[\[ -x /opt/homebrew/bin/brew \]\]; then$' \
+      '^  eval "\$\(/opt/homebrew/bin/brew shellenv\)"$' \
+      '^elif \[\[ -x /usr/local/bin/brew \]\]; then$' \
+      '^  eval "\$\(/usr/local/bin/brew shellenv\)"$' \
+      '^elif \[\[ -x "\$HOME/.linuxbrew/bin/brew" \]\]; then$' \
+      '^  eval "\$\("\$HOME/.linuxbrew/bin/brew" shellenv\)"$' \
+      '^elif \[\[ -x /home/linuxbrew/.linuxbrew/bin/brew \]\]; then$' \
+      '^  eval "\$\(/home/linuxbrew/.linuxbrew/bin/brew shellenv\)"$' \
+      '^fi$'
+    changed=1
+  done
+
+  if [[ "$changed" -eq 1 ]]; then
+    ok "Removed terminal-setup Homebrew profile lines"
+  else
+    warn "No terminal-setup Homebrew profile lines found"
+  fi
+}
+
+uninstall_homebrew() {
+  local prefix
+  local tmp
+
+  load_brew_env || {
+    warn "Homebrew is already unavailable"
+    return 0
+  }
+
+  prefix="$(brew --prefix)"
+  tmp="$(mktemp -d)"
+  info "Running official Homebrew uninstall script for $prefix"
+  curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh -o "$tmp/uninstall.sh"
+  NONINTERACTIVE=1 /bin/bash "$tmp/uninstall.sh" --path "$prefix"
+  rm -rf "$tmp"
+  ok "Homebrew uninstall finished"
 }
 
 install_linux_font_release() {

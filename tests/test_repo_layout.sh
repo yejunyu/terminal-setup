@@ -16,8 +16,17 @@ require_file "lib/common.sh"
 require_file "configs/zsh/.zshrc"
 require_file "configs/wezterm/.wezterm.lua"
 require_file "README.md"
+require_file "assets/wallpaper.jpg"
+require_file "docs/plans/2026-03-26-terminal-setup-uninstall-design.md"
+require_file "docs/plans/2026-03-26-terminal-setup-uninstall.md"
 
 bash -n "$ROOT_DIR/setup.sh"
 bash -n "$ROOT_DIR/lib/common.sh"
+
+grep -q "install" "$ROOT_DIR/setup.sh"
+grep -q "uninstall" "$ROOT_DIR/setup.sh"
+grep -q "wallpaper.jpg" "$ROOT_DIR/configs/wezterm/.wezterm.lua"
+grep -q "bash setup.sh install" "$ROOT_DIR/README.md"
+grep -q "bash setup.sh uninstall" "$ROOT_DIR/README.md"
 
 echo "repo layout smoke test passed"
