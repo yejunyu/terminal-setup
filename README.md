@@ -75,6 +75,7 @@ bash setup.sh uninstall
 - `setup.sh install --skip-wezterm-install` skips only the `brew install wezterm` step. It still writes `.wezterm.lua`, copies the wallpaper, and keeps the font steps unchanged.
 - `setup.sh uninstall` is interactive. It can remove WezTerm, Neovim, Go, CLI tools, `oh-my-zsh`, `powerlevel10k`, `bun`, `fnm`, Node runtimes, and Homebrew/Linuxbrew.
 - The shell setup enables `extract`, `zsh-autosuggestions`, and `zsh-syntax-highlighting`.
+- The generated `.zshrc` bootstraps Homebrew/Linuxbrew `shellenv`, so brew-installed commands are available even in non-login `zsh` shells.
 - Uninstall preserves `zsh`, fonts, and the wallpaper file.
 - When uninstall removes shell customizations, it restores your previous `.zshrc` if one was backed up; otherwise it writes a minimal fallback `.zshrc`.
 - On Linux, font installation is best-effort: the installer bootstraps the two primary Nerd Fonts first, then warns if you still need extra CJK fallback fonts.
