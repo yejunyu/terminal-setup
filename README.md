@@ -73,6 +73,7 @@ bash setup.sh uninstall
 - `HOMEBREW_CORE_GIT_REMOTE` is intentionally not set by default, matching the current TUNA guidance for modern brew installs.
 - `setup.sh install` detects the operating system with `uname -s` and applies the correct macOS or Linux installation path.
 - `setup.sh install --skip-wezterm-install` skips only the `brew install wezterm` step. It still writes `.wezterm.lua`, copies the wallpaper, and keeps the font steps unchanged.
+- On macOS, font casks are installed one by one. If a single font is already present or its install fails, the installer prints a warning and continues.
 - `setup.sh uninstall` is interactive. It can remove WezTerm, Neovim, Go, CLI tools, `oh-my-zsh`, `powerlevel10k`, `bun`, `fnm`, Node runtimes, and Homebrew/Linuxbrew.
 - The shell setup enables `extract`, `zsh-autosuggestions`, and `zsh-syntax-highlighting`.
 - The generated `.zshrc` bootstraps Homebrew/Linuxbrew `shellenv`, so brew-installed commands are available even in non-login `zsh` shells.

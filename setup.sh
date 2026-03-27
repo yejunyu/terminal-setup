@@ -49,6 +49,9 @@ UNINSTALL_FORMULAE=(
 
 MAC_CASKS=(
   wezterm
+)
+
+MAC_FONT_CASKS=(
   font-martian-mono-nerd-font
   font-jetbrains-mono-nerd-font
   font-cascadia-mono
@@ -78,14 +81,10 @@ run_install() {
       brew_install "${COMMON_FORMULAE[@]}"
       if [[ "$SKIP_WEZTERM_INSTALL" -eq 1 ]]; then
         info "Skipping WezTerm cask install by request"
-        brew_install_casks \
-          font-martian-mono-nerd-font \
-          font-jetbrains-mono-nerd-font \
-          font-cascadia-mono \
-          font-noto-sans-mono-cjk-sc
       else
         brew_install_casks "${MAC_CASKS[@]}"
       fi
+      brew_install_font_casks_best_effort "${MAC_FONT_CASKS[@]}"
       ;;
     Linux)
       ensure_linux_prereqs

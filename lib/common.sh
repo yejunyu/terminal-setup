@@ -338,6 +338,22 @@ brew_install_casks() {
   fi
 }
 
+brew_install_font_casks_best_effort() {
+  local pkg
+
+  for pkg in "$@"; do
+    if brew list --cask "$pkg" >/dev/null 2>&1; then
+      ok "Font cask already installed: $pkg"
+      continue
+    fi
+
+    info "Installing font cask: $pkg"
+    if ! brew install --cask "$pkg"; then
+      warn "Skipping font cask after install failure: $pkg"
+    fi
+  done
+}
+
 brew_uninstall_formulae() {
   local installed=()
   local pkg
