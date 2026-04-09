@@ -14,6 +14,7 @@ COMMON_FORMULAE=(
   zsh
   neovim
   go
+  tree-sitter
   bat
   eza
   fd
@@ -32,6 +33,7 @@ COMMON_FORMULAE=(
 UNINSTALL_FORMULAE=(
   neovim
   go
+  tree-sitter
   bat
   eza
   fd
@@ -89,7 +91,7 @@ run_install() {
     Linux)
       ensure_linux_prereqs
       install_homebrew
-      brew_install "${COMMON_FORMULAE[@]}" unzip fontconfig
+      brew_install "${COMMON_FORMULAE[@]}" unzip fontconfig build-essential
       if [[ "$SKIP_WEZTERM_INSTALL" -eq 1 ]]; then
         info "Skipping WezTerm formula install by request"
       else
@@ -103,6 +105,7 @@ run_install() {
       ;;
   esac
 
+  configure_go_proxy
   install_oh_my_zsh
   install_zsh_plugins
   install_p10k

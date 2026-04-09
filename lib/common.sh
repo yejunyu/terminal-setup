@@ -20,6 +20,8 @@ ZSH_AUTOSUGGESTIONS_REMOTE="${ZSH_AUTOSUGGESTIONS_REMOTE:-https://gitee.com/zsh-
 ZSH_SYNTAX_HIGHLIGHTING_REMOTE="${ZSH_SYNTAX_HIGHLIGHTING_REMOTE:-https://gitee.com/zsh-users/zsh-syntax-highlighting.git}"
 NVIM_REMOTE="${NVIM_REMOTE:-https://github.com/yejunyu/mynvim.git}"
 BUN_INSTALL_URL="${BUN_INSTALL_URL:-https://bun.sh/install}"
+GO111MODULE_VALUE="${GO111MODULE_VALUE:-on}"
+GOPROXY_VALUE="${GOPROXY_VALUE:-https://goproxy.cn,direct}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -518,6 +520,29 @@ install_bun() {
   export PATH="$BUN_INSTALL/bin:$PATH"
   command -v bun >/dev/null 2>&1 || die "bun installer completed but bun is still unavailable"
   ok "bun installed"
+}
+
+configure_go_proxy() {
+  if ! command -v go >/dev/null 2>&1; then
+    warn "go command not found; skipping Go proxy setup"
+    return 0
+  fi
+
+  local current_go111module=""
+  local current_goproxy=""
+
+  current_go111module="$(go env GO111MODULE 2>/dev/null || true)"
+  current_goproxy="$(go env GOPROXY 2>/dev/null || true)"
+
+  if [[ "$current_go111module" != "$GO111MODULE_VALUE" ]]; then
+    go env -w "GO111MODULE=$GO111MODULE_VALUE"
+  fi
+
+  if [[ "$current_goproxy" != "$GOPROXY_VALUE" ]]; then
+    go env -w "GOPROXY=$GOPROXY_VALUE"
+  fi
+
+  ok "Configured Go modules and proxy: GO111MODULE=$GO111MODULE_VALUE GOPROXY=$GOPROXY_VALUE"
 }
 
 remove_bun_runtime() {

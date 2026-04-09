@@ -53,6 +53,7 @@ bash setup.sh uninstall
 - fnm + Node.js LTS
 - bun
 - Modern CLI tools:
+  - tree-sitter
   - bat
   - eza
   - fd
@@ -82,6 +83,7 @@ bash setup.sh uninstall
 - On Linux, font installation is best-effort: the installer bootstraps the two primary Nerd Fonts first, then warns if you still need extra CJK fallback fonts.
 - On first launch after setup, run `p10k configure` to generate your own `~/.p10k.zsh`.
 - During install, the wallpaper from `assets/wallpaper.jpg` is copied to `~/.config/terminal-setup/wallpaper.jpg`.
+- On Linux, the installer also installs Homebrew formulae `build-essential`, `unzip`, and `fontconfig`.
 
 ## Linux Preflight
 
@@ -213,6 +215,18 @@ That means Go, TS/TSX, and Tailwind support are already wired on the Neovim side
 ## Go Development Environment
 
 The setup scripts install `go` via Homebrew/Linuxbrew.
+During install, they also run:
+
+```bash
+go env -w GO111MODULE=on
+go env -w GOPROXY=https://goproxy.cn,direct
+```
+
+You can override these defaults before install:
+
+```bash
+GO111MODULE_VALUE=on GOPROXY_VALUE=https://goproxy.cn,direct bash setup.sh install
+```
 
 Verify:
 
