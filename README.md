@@ -2,6 +2,26 @@
 
 Cross-platform terminal bootstrap for macOS and Linux, built around your current WezTerm config, `zsh + oh-my-zsh + p10k`, and your Neovim repo at `yejunyu/mynvim`.
 
+## Windows WezTerm + WSL
+
+Windows WezTerm is configured to open the default WSL distribution directly as user `yjy`:
+
+```lua
+config.default_prog = { "wsl.exe", "-u", "yjy" }
+```
+
+Install the WezTerm config at `%USERPROFILE%\\.wezterm.lua`, then fully restart WezTerm. Verify the active user with:
+
+```bash
+whoami
+```
+
+It should output `yjy`. If you use a non-default WSL distribution, specify it explicitly:
+
+```lua
+config.default_prog = { "wsl.exe", "-d", "Ubuntu", "-u", "yjy" }
+```
+
 ## Repository Layout
 
 ```text
@@ -29,12 +49,6 @@ cd terminal-setup
 bash setup.sh install
 ```
 
-Server-style install without the WezTerm package:
-
-```bash
-bash setup.sh install --skip-wezterm-install
-```
-
 ## Uninstall
 
 ```bash
@@ -44,13 +58,15 @@ bash setup.sh uninstall
 ## What Gets Installed
 
 - Homebrew / Linuxbrew using TUNA mirrors
-- WezTerm with your shared `.wezterm.lua`
+- The shared WezTerm config at `~/.wezterm.lua` (WezTerm itself is installed manually)
+- Homebrew cask: Codex (`brew install --cask codex`) on macOS and Linux/WSL
 - Managed WezTerm wallpaper at `~/.config/terminal-setup/wallpaper.jpg`
 - Zsh, Oh My Zsh, and powerlevel10k
 - Oh My Zsh plugins: `extract`, `zsh-autosuggestions`, `zsh-syntax-highlighting`
 - Neovim plus your `yejunyu/mynvim` LazyVim config
 - Go
 - fnm + Node.js LTS
+- pnpm installed globally through npm
 - bun
 - Modern CLI tools:
   - tree-sitter
@@ -73,9 +89,9 @@ bash setup.sh uninstall
 - It only updates existing shell profile files; if none exist, it creates `~/.zprofile` instead of creating every possible profile file.
 - `HOMEBREW_CORE_GIT_REMOTE` is intentionally not set by default, matching the current TUNA guidance for modern brew installs.
 - `setup.sh install` detects the operating system with `uname -s` and applies the correct macOS or Linux installation path.
-- `setup.sh install --skip-wezterm-install` skips only the `brew install wezterm` step. It still writes `.wezterm.lua`, copies the wallpaper, and keeps the font steps unchanged.
+- The installer does not install or uninstall WezTerm; it assumes WezTerm is installed manually and only manages its config file.
 - On macOS, font casks are installed one by one. If a single font is already present or its install fails, the installer prints a warning and continues.
-- `setup.sh uninstall` is interactive. It can remove WezTerm, Neovim, Go, CLI tools, `oh-my-zsh`, `powerlevel10k`, `bun`, `fnm`, Node runtimes, and Homebrew/Linuxbrew.
+- `setup.sh uninstall` is interactive. It can remove WezTerm config, Neovim, Go, CLI tools, `oh-my-zsh`, `powerlevel10k`, `bun`, `fnm`, Node runtimes, and Homebrew/Linuxbrew.
 - The shell setup enables `extract`, `zsh-autosuggestions`, and `zsh-syntax-highlighting`.
 - The generated `.zshrc` bootstraps Homebrew/Linuxbrew `shellenv`, so brew-installed commands are available even in non-login `zsh` shells.
 - Uninstall preserves `zsh`, fonts, and the wallpaper file.
@@ -83,7 +99,9 @@ bash setup.sh uninstall
 - On Linux, font installation is best-effort: the installer bootstraps the two primary Nerd Fonts first, then warns if you still need extra CJK fallback fonts.
 - On first launch after setup, run `p10k configure` to generate your own `~/.p10k.zsh`.
 - During install, the wallpaper from `assets/wallpaper.jpg` is copied to `~/.config/terminal-setup/wallpaper.jpg`.
-- On Linux, the installer also installs Homebrew formulae `build-essential`, `unzip`, and `fontconfig`.
+- On Debian/Ubuntu/WSL, the installer runs `sudo apt update` and `sudo apt install -y build-essential` before installing Homebrew formulae.
+- On Linux, the installer installs Homebrew formulae `unzip` and `fontconfig`; macOS uses its separate Xcode Command Line Tools check.
+- On Windows, WezTerm starts the default WSL distribution as user `yjy`; the WezTerm config must be installed at `%USERPROFILE%\\.wezterm.lua` because Windows WezTerm does not read the WSL home directory config.
 
 ## Linux Preflight
 
@@ -119,7 +137,7 @@ sudo pacman -S base-devel procps-ng curl file git
 
 `bash setup.sh uninstall` confirms each group separately:
 
-- brew-managed packages: WezTerm, Neovim, Go, CLI tools, and `fnm`
+- brew-managed packages: Neovim, Go, and CLI tools
 - shell customizations: `oh-my-zsh`, `powerlevel10k`, `zsh-autosuggestions`, `zsh-syntax-highlighting`, and `.zshrc`
   If there was no pre-install `.zshrc` backup, uninstall writes a minimal fallback `.zshrc` instead of leaving the file absent.
 - runtimes: `bun`, `fnm`, and installed Node versions
@@ -271,7 +289,7 @@ If `gopls` is missing, install it from `:Mason`.
 
 ## React + TSX + Tailwind Development Environment
 
-The setup scripts install Node LTS via `fnm`, so you can start a React + TypeScript project with Vite immediately.
+The setup scripts install Node LTS via `fnm` and install `pnpm` globally, so you can start a React + TypeScript project with Vite immediately.
 
 Create the project:
 

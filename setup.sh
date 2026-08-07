@@ -6,7 +6,6 @@ source "$SCRIPT_DIR/lib/common.sh"
 
 OS_NAME="$(uname -s)"
 ACTION="${1:-}"
-SKIP_WEZTERM_INSTALL=0
 
 COMMON_FORMULAE=(
   git
@@ -49,8 +48,8 @@ UNINSTALL_FORMULAE=(
   fnm
 )
 
-MAC_CASKS=(
-  wezterm
+BREW_CASKS=(
+  codex
 )
 
 MAC_FONT_CASKS=(
@@ -64,7 +63,6 @@ usage() {
   cat <<'EOF'
 Usage:
   bash setup.sh install
-  bash setup.sh install --skip-wezterm-install
   bash setup.sh uninstall
 EOF
 }
@@ -81,23 +79,14 @@ run_install() {
 
       install_homebrew
       brew_install "${COMMON_FORMULAE[@]}"
-      if [[ "$SKIP_WEZTERM_INSTALL" -eq 1 ]]; then
-        info "Skipping WezTerm cask install by request"
-      else
-        brew_install_casks "${MAC_CASKS[@]}"
-      fi
+      brew_install_casks "${BREW_CASKS[@]}"
       brew_install_font_casks_best_effort "${MAC_FONT_CASKS[@]}"
       ;;
     Linux)
-      ensure_linux_prereqs
+      install_linux_prereqs
       install_homebrew
-      brew_install "${COMMON_FORMULAE[@]}" unzip fontconfig build-essential
-      if [[ "$SKIP_WEZTERM_INSTALL" -eq 1 ]]; then
-        info "Skipping WezTerm formula install by request"
-      else
-        brew tap wezterm/wezterm-linuxbrew
-        brew_install wezterm
-      fi
+      brew_install "${COMMON_FORMULAE[@]}" unzip fontconfig
+      brew_install_casks "${BREW_CASKS[@]}"
       install_linux_fonts_best_effort
       ;;
     *)
@@ -137,14 +126,13 @@ run_uninstall() {
 
   info "Interactive uninstall will preserve zsh, fonts, and wallpaper."
 
-  if confirm_action "Remove WezTerm, Neovim, Go, CLI tools, and fnm from Homebrew/Linuxbrew?"; then
+  if confirm_action "Remove Neovim, Go, CLI tools, and fnm from Homebrew/Linuxbrew?"; then
     case "$OS_NAME" in
       Darwin)
-        brew_uninstall_casks wezterm
         brew_uninstall_formulae "${UNINSTALL_FORMULAE[@]}"
         ;;
       Linux)
-        brew_uninstall_formulae wezterm "${UNINSTALL_FORMULAE[@]}"
+        brew_uninstall_formulae "${UNINSTALL_FORMULAE[@]}"
         ;;
       *)
         die "Unsupported operating system: $OS_NAME"
@@ -206,9 +194,6 @@ case "$ACTION" in
     shift
     while [[ "$#" -gt 0 ]]; do
       case "$1" in
-        --skip-wezterm-install)
-          SKIP_WEZTERM_INSTALL=1
-          ;;
         *)
           usage
           exit 1

@@ -281,6 +281,20 @@ EOF
   exit 1
 }
 
+install_linux_prereqs() {
+  if command -v apt-get >/dev/null 2>&1; then
+    need_cmd sudo
+    info "Updating apt package lists..."
+    sudo apt update
+    info "Installing Linux build prerequisites..."
+    sudo apt install -y build-essential
+  else
+    warn "apt-get not found; skipping automatic build-essential installation"
+  fi
+
+  ensure_linux_prereqs
+}
+
 install_homebrew() {
   need_cmd git
   need_cmd curl
@@ -567,7 +581,8 @@ configure_fnm_node() {
   fnm install --lts
   fnm default lts-latest
   fnm use lts-latest
-  ok "Node LTS installed and selected through fnm"
+  npm install --global pnpm
+  ok "Node LTS installed and selected through fnm; pnpm installed globally"
 }
 
 remove_fnm_runtime() {

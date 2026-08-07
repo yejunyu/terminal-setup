@@ -12,7 +12,8 @@ config.max_fps = 120
 config.front_end = "WebGpu"
 
 if is_windows then
-	config.default_prog = { "wsl.exe" }
+	-- Start the default WSL distribution as the yjy user.
+	config.default_prog = { "wsl.exe", "-u", "yjy" }
 elseif is_macos then
 	config.default_prog = { "/bin/zsh", "-l" }
 elseif is_linux then
