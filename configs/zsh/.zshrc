@@ -27,6 +27,12 @@ fi
 export EDITOR="nvim"
 export VISUAL="nvim"
 
+if [[ -d "$HOME/.local/share/fnm" ]]; then
+  export PATH="$HOME/.local/share/fnm:$PATH"
+elif [[ -d "$HOME/.fnm" ]]; then
+  export PATH="$HOME/.fnm:$PATH"
+fi
+
 export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
 if command -v fd >/dev/null 2>&1; then
   export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'

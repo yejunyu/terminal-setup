@@ -295,6 +295,29 @@ install_linux_prereqs() {
   ensure_linux_prereqs
 }
 
+install_wsl_prereqs() {
+  need_cmd sudo
+  need_cmd apt-get
+  info "Updating Ubuntu package lists for WSL..."
+  sudo apt-get update
+  info "Installing Homebrew prerequisites for WSL..."
+  sudo apt-get install -y build-essential ca-certificates curl file git procps unzip
+  ensure_linux_prereqs
+}
+
+install_fnm() {
+  if command -v fnm >/dev/null 2>&1; then
+    ok "fnm already installed"
+    return 0
+  fi
+
+  info "Installing fnm via the official installer..."
+  curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell
+  export PATH="$HOME/.local/share/fnm:$HOME/.fnm:$PATH"
+  command -v fnm >/dev/null 2>&1 || die "fnm installer completed but fnm is still unavailable"
+  ok "fnm installed"
+}
+
 install_homebrew() {
   need_cmd git
   need_cmd curl
@@ -503,7 +526,7 @@ remove_zsh_plugins() {
 configure_default_zsh() {
   local zsh_path
 
-  if [[ -x "$(brew --prefix)/bin/zsh" ]]; then
+  if command -v brew >/dev/null 2>&1 && [[ -x "$(brew --prefix)/bin/zsh" ]]; then
     zsh_path="$(brew --prefix)/bin/zsh"
   else
     zsh_path="$(command -v zsh)"

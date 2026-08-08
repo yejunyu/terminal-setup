@@ -5,7 +5,12 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
 
 OS_NAME="$(uname -s)"
+IS_WSL=0
+if [[ "$OS_NAME" == "Linux" ]] && { [[ -n "${WSL_INTEROP:-}" ]] || grep -qiE '(microsoft|wsl)' /proc/version 2>/dev/null; }; then
+  IS_WSL=1
+fi
 ACTION="${1:-}"
+SKIP_WEZTERM_INSTALL=0
 
 COMMON_FORMULAE=(
   git
@@ -62,7 +67,7 @@ MAC_FONT_CASKS=(
 usage() {
   cat <<'EOF'
 Usage:
-  bash setup.sh install
+  bash setup.sh install [--skip-wezterm-install]
   bash setup.sh uninstall
 EOF
 }
@@ -83,11 +88,18 @@ run_install() {
       brew_install_font_casks_best_effort "${MAC_FONT_CASKS[@]}"
       ;;
     Linux)
-      install_linux_prereqs
-      install_homebrew
-      brew_install "${COMMON_FORMULAE[@]}" unzip fontconfig
-      brew_install_casks "${BREW_CASKS[@]}"
-      install_linux_fonts_best_effort
+      if [[ "$IS_WSL" -eq 1 ]]; then
+        install_wsl_prereqs
+        install_homebrew
+        brew_install "${COMMON_FORMULAE[@]}" unzip fontconfig
+      else
+        install_linux_prereqs
+        install_homebrew
+        brew_install "${COMMON_FORMULAE[@]}" unzip fontconfig
+        brew_install_casks "${BREW_CASKS[@]}"
+        [[ "$SKIP_WEZTERM_INSTALL" -eq 1 ]] || brew_install wezterm
+        install_linux_fonts_best_effort
+      fi
       ;;
     *)
       die "Unsupported operating system: $OS_NAME"
@@ -101,8 +113,12 @@ run_install() {
   install_bun
 
   copy_with_backup "$CONFIG_DIR/zsh/.zshrc" "$HOME/.zshrc"
-  copy_with_backup "$CONFIG_DIR/wezterm/.wezterm.lua" "$HOME/.wezterm.lua"
-  copy_wallpaper
+  if [[ "$IS_WSL" -eq 1 ]]; then
+    info "WSL detected: leaving Windows WezTerm config and fonts to the Windows host"
+  else
+    copy_with_backup "$CONFIG_DIR/wezterm/.wezterm.lua" "$HOME/.wezterm.lua"
+    copy_wallpaper
+  fi
 
   configure_default_zsh
   configure_fnm_node
@@ -124,14 +140,14 @@ run_uninstall() {
   prepare_run
   previous_backup_dir="$(find_latest_backup_dir "$BACKUP_DIR" || true)"
 
-  info "Interactive uninstall will preserve zsh, fonts, and wallpaper."
+  info "Interactive uninstall preserves zsh, Ubuntu system packages, and Windows-side fonts."
 
   if confirm_action "Remove Neovim, Go, CLI tools, and fnm from Homebrew/Linuxbrew?"; then
-    case "$OS_NAME" in
-      Darwin)
+    case "$OS_NAME:$IS_WSL" in
+      Darwin:0)
         brew_uninstall_formulae "${UNINSTALL_FORMULAE[@]}"
         ;;
-      Linux)
+      Linux:*)
         brew_uninstall_formulae "${UNINSTALL_FORMULAE[@]}"
         ;;
       *)
@@ -194,6 +210,9 @@ case "$ACTION" in
     shift
     while [[ "$#" -gt 0 ]]; do
       case "$1" in
+        --skip-wezterm-install)
+          SKIP_WEZTERM_INSTALL=1
+          ;;
         *)
           usage
           exit 1
