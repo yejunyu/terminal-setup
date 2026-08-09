@@ -58,10 +58,7 @@ BREW_CASKS=(
 )
 
 MAC_FONT_CASKS=(
-  font-martian-mono-nerd-font
-  font-jetbrains-mono-nerd-font
-  font-cascadia-mono
-  font-noto-sans-mono-cjk-sc
+  font-maple-mono-nf-cn
 )
 
 usage() {

@@ -747,36 +747,14 @@ uninstall_homebrew() {
   ok "Homebrew uninstall finished"
 }
 
-install_linux_font_release() {
-  local family="$1"
-  local match="$2"
-  local fonts_dir="${3:-${XDG_DATA_HOME:-$HOME/.local/share}/fonts}"
-
-  if find "$fonts_dir" -maxdepth 1 -type f -iname "$match" | grep -q . 2>/dev/null; then
-    ok "Font already present for $family"
-    return 0
-  fi
-
-  local tmp
-  tmp="$(mktemp -d)"
-  curl -fsSL "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/${family}.zip" -o "$tmp/${family}.zip"
-  unzip -oq "$tmp/${family}.zip" -d "$tmp/$family"
-  find "$tmp/$family" -type f \( -name '*.ttf' -o -name '*.otf' \) -exec cp {} "$fonts_dir/" \;
-  rm -rf "$tmp"
-  ok "Installed $family fonts into $fonts_dir"
-}
-
 install_linux_fonts_best_effort() {
   local fonts_dir="${XDG_DATA_HOME:-$HOME/.local/share}/fonts"
   mkdir -p "$fonts_dir"
 
-  brew_install unzip fontconfig
-  install_linux_font_release "MartianMono" "*MartianMono*"
-  install_linux_font_release "JetBrainsMono" "*JetBrainsMono*"
+  brew_install fontconfig
+  brew_install_font_casks_best_effort font-maple-mono-nf-cn
 
   if command -v fc-cache >/dev/null 2>&1; then
     fc-cache -f "$fonts_dir"
   fi
-
-  warn "Linux font bootstrap installed the two primary Nerd Fonts. Cascadia Mono and Noto Sans Mono CJK SC may still need manual installation on some distros."
 }

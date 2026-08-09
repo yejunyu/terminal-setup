@@ -22,12 +22,7 @@ end
 
 -- 2) Visual and fonts
 config.color_scheme = "Tokyo Night"
-config.font = wezterm.font_with_fallback({
-	"MartianMono Nerd Font Mono",
-	"JetBrainsMono Nerd Font",
-	"Cascadia Mono",
-	"Noto Sans Mono CJK SC",
-})
+config.font = wezterm.font("Maple Mono NF CN")
 config.font_size = 15.0
 config.line_height = 1.2
 

@@ -108,7 +108,7 @@ config.default_prog = { "wsl.exe", "-u", "yjy" }
 config.default_prog = { "wsl.exe", "-d", "Ubuntu", "-u", "你的用户名" }
 ```
 
-字体也安装在 Windows 中。建议安装 `MartianMono Nerd Font`、`JetBrainsMono Nerd Font` 和 `Noto Sans Mono CJK SC`，否则 WezTerm 可能无法显示图标或中文。
+字体需要单独安装在 Windows 中。请打开 [Maple Mono NF CN](https://github.com/subframe7536/maple-font) 的 GitHub 页面，在 Releases 下载并安装 `font-maple-mono-nf-cn` 对应的字体包。WSL 脚本不会安装 Linux 字体。
 
 ### WSL 侧：安装开发环境
 
@@ -184,7 +184,7 @@ cd ~/terminal-setup
 bash setup.sh install
 ```
 
-脚本会安装 Homebrew、开发工具、Codex cask 和 macOS 字体。字体逐个安装，单个字体失败不会中断整个流程。
+脚本会安装 Homebrew、开发工具、Codex cask 和 Maple Mono NF CN 字体。macOS 和普通 Linux 使用 Homebrew cask `font-maple-mono-nf-cn` 安装；字体安装失败只会显示警告，不会中断整个流程。
 
 ## 仓库结构
 
