@@ -93,7 +93,7 @@ ensure_block_once() {
   local marker="$2"
   local content="$3"
   touch "$file"
-  grep -qF "$marker" "$file" 2>/dev/null || printf '\n%s\n%s\n' "$marker" "$content" >> "$file"
+  grep -qF -- "$marker" "$file" 2>/dev/null || printf '\n%s\n%s\n' "$marker" "$content" >> "$file"
 }
 
 find_latest_backup_dir() {
@@ -639,6 +639,7 @@ install_nvim_config() {
       else
         warn "Existing Neovim config has local changes; leaving it untouched"
       fi
+      configure_nvim_clipboard "$target"
       return 0
     fi
   fi
@@ -649,7 +650,47 @@ install_nvim_config() {
 
   info "Cloning Neovim config from $NVIM_REMOTE"
   git clone --depth=1 "$NVIM_REMOTE" "$target"
+  configure_nvim_clipboard "$target"
   ok "Neovim config installed"
+}
+
+configure_nvim_clipboard() {
+  local nvim_dir="$1"
+  local options_file="$nvim_dir/lua/config/options.lua"
+  local marker="-- terminal-setup: system clipboard"
+  local content
+
+  [[ -f "$options_file" ]] || {
+    warn "Neovim options file not found; skipping system clipboard configuration"
+    return 0
+  }
+
+  read -r -d '' content <<'EOF' || true
+-- Neovim sends ordinary yanks to the host system clipboard.
+if vim.fn.has("macunix") == 1 then
+  vim.g.clipboard = {
+    name = "macOS",
+    copy = { ["+"] = "pbcopy", ["*"] = "pbcopy" },
+    paste = { ["+"] = "pbpaste", ["*"] = "pbpaste" },
+    cache_enabled = 0,
+  }
+elseif vim.fn.has("wsl") == 1 or vim.fn.executable("clip.exe") == 1 then
+  vim.g.clipboard = {
+    name = "WSL",
+    copy = { ["+"] = "clip.exe", ["*"] = "clip.exe" },
+    paste = {
+      ["+"] = "powershell.exe -NoProfile -Command Get-Clipboard",
+      ["*"] = "powershell.exe -NoProfile -Command Get-Clipboard",
+    },
+    cache_enabled = 0,
+  }
+end
+
+vim.opt.clipboard = "unnamedplus"
+EOF
+
+  ensure_block_once "$options_file" "$marker" "$content"
+  ok "Configured Neovim system clipboard"
 }
 
 remove_exact_lines() {

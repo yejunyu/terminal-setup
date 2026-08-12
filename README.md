@@ -78,6 +78,8 @@ nvim
 
 等待插件自动安装完成，然后在 Neovim 中执行 `:checkhealth` 检查环境。
 
+安装器会将普通的 Neovim 复制操作（例如 `y`、`yy`）同步到系统剪贴板：macOS 使用 `pbcopy`，WSL 使用 Windows 的 `clip.exe`。因此可直接在宿主应用中粘贴。
+
 ## WSL 安装
 
 WSL 中的 Linux 用户空间和 Windows 桌面是两个环境。脚本在 WSL 内使用 Linuxbrew/Homebrew 安装开发工具；WezTerm 应用和字体安装在 Windows 侧。
