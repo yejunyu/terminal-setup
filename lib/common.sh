@@ -639,6 +639,7 @@ install_nvim_config() {
       else
         warn "Existing Neovim config has local changes; leaving it untouched"
       fi
+      remove_nvim_kulala "$target"
       configure_nvim_clipboard "$target"
       return 0
     fi
@@ -650,8 +651,28 @@ install_nvim_config() {
 
   info "Cloning Neovim config from $NVIM_REMOTE"
   git clone --depth=1 "$NVIM_REMOTE" "$target"
+  remove_nvim_kulala "$target"
   configure_nvim_clipboard "$target"
   ok "Neovim config installed"
+}
+
+remove_nvim_kulala() {
+  local nvim_dir="$1"
+  local plugin_spec="$nvim_dir/lua/plugins/http.lua"
+  local lockfile="$nvim_dir/lazy-lock.json"
+  local tmp
+
+  if [[ -e "$plugin_spec" ]]; then
+    rm -f "$plugin_spec"
+    ok "Removed unused Kulala Neovim plugin configuration"
+  fi
+
+  if [[ -f "$lockfile" ]] && command -v jq >/dev/null 2>&1 && jq -e 'has("kulala.nvim")' "$lockfile" >/dev/null 2>&1; then
+    tmp="$(mktemp)"
+    jq 'del(."kulala.nvim")' "$lockfile" > "$tmp"
+    mv "$tmp" "$lockfile"
+    ok "Removed Kulala from the Neovim plugin lockfile"
+  fi
 }
 
 configure_nvim_clipboard() {
